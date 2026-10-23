@@ -12,35 +12,6 @@ datasource db {
   provider = "sqlite"
 }
 
-model Leerling {
-  id             Int             @id @default(autoincrement())
-  naam           String
-  telefoonOuder  String?
-  actief         Boolean         @default(true)
-  aangemaaktOp   DateTime        @default(now())
-  aanwezigheden  Aanwezigheid[]
-}
-
-model Lezing {
-  id             Int             @id @default(autoincrement())
-  datum          DateTime
-  titel          String?
-  huis           String
-  hatip          String
-  aanwezigheden  Aanwezigheid[]
-}
-
-model Aanwezigheid {
-  id          Int       @id @default(autoincrement())
-  leerlingId  Int
-  lezingId    Int
-  aanwezig    Boolean
-  leerling    Leerling  @relation(fields: [leerlingId], references: [id])
-  lezing      Lezing    @relation(fields: [lezingId], references: [id], onDelete: Cascade)
-
-  @@unique([leerlingId, lezingId])
-}
-
 model Beheerder {
   id             Int      @id @default(autoincrement())
   email          String?  @unique

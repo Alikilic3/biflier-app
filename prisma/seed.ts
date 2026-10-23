@@ -4,6 +4,9 @@ import { PrismaClient } from "../app/generated/prisma/client";
 
 // Placeholder-accounts: pas e-mail en wachtwoord hieronder aan (of wijzig ze
 // later in de database) voordat je dit script in een echte omgeving draait.
+// Rollen: "admin" (enkel mehmet@bif.be, mag de agenda bewerken) en "leiding"
+// (kan inloggen en ziet ook activiteiten met zichtbaarheid "leiding", maar
+// kan niets wijzigen).
 const BEHEERDERS = [
   {
     email: "mehmet@bif.be",
@@ -15,25 +18,13 @@ const BEHEERDERS = [
     email: "yusuf@bif.be",
     tijdelijkWachtwoord: "root123",
     naam: "Yusuf Can Isik",
-    rol: "admin",
+    rol: "leiding",
   },
   {
     email: "beheerder3@voorbeeld.nl",
     tijdelijkWachtwoord: "WijzigMij123!",
     naam: "Beheerder Drie",
-    rol: "admin",
-  },
-];
-
-// Gedeeld, tijdelijk "lid"-account (rol "lid": alleen leesrechten, geen
-// bewerk-/aanmaak-/verwijderknoppen). Later te vervangen door individuele
-// accounts per lid.
-const LEDEN = [
-  {
-    gebruikersnaam: "bif",
-    tijdelijkWachtwoord: "2026",
-    naam: "Lid",
-    rol: "lid",
+    rol: "leiding",
   },
 ];
 
@@ -58,19 +49,6 @@ async function main() {
     );
   }
 
-  for (const { gebruikersnaam, tijdelijkWachtwoord, naam, rol } of LEDEN) {
-    const wachtwoordHash = await bcrypt.hash(tijdelijkWachtwoord, 10);
-
-    await prisma.beheerder.upsert({
-      where: { gebruikersnaam },
-      create: { gebruikersnaam, wachtwoordHash, naam, rol },
-      update: { wachtwoordHash, naam, rol },
-    });
-
-    console.log(
-      `Lid klaar: ${gebruikersnaam} (tijdelijk wachtwoord: ${tijdelijkWachtwoord}, rol: ${rol})`,
-    );
-  }
 }
 
 main()

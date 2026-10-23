@@ -27,25 +27,6 @@ export default async function Header() {
         <div className="flex items-center gap-4 text-sm">
           {beheerder ? (
             <>
-              {beheerder.rol === "admin" && (
-                <>
-                  <Link
-                    href="/lezingen/nieuw"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
-                  >
-                    <span aria-hidden className="text-base leading-none">
-                      +
-                    </span>
-                    Nieuwe lezing
-                  </Link>
-                  <Link
-                    href="/leerlingen"
-                    className="text-neutral-600 transition-colors hover:text-neutral-900"
-                  >
-                    Leerlingen
-                  </Link>
-                </>
-              )}
               <span className="hidden text-neutral-400 sm:inline">·</span>
               <span className="hidden text-neutral-500 sm:inline">
                 Ingelogd als{" "}

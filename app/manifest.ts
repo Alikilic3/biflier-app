@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "BifLier",
     short_name: "BifLier",
-    description: "Aanwezigheidsregistratie voor lezingen",
+    description: "Agenda van BIF",
     start_url: "/",
     display: "standalone",
     background_color: "#fafafa",

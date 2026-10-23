@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "BifLier",
-  description: "Aanwezigheidsregistratie voor lezingen",
+  description: "Agenda van BIF",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
