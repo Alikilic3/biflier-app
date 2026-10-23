@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getBeheerder } from "@/lib/dal";
-import { berekenWaarschuwingen } from "@/lib/waarschuwingen";
+import { berekenWaarschuwingenVanData } from "@/lib/waarschuwingen";
 import AttendanceTrendChart from "./components/AttendanceTrendChart";
 import LeerlingZoekbalk from "./components/LeerlingZoekbalk";
 
@@ -21,15 +21,34 @@ function formatKorteDatum(datum: Date) {
 }
 
 export default async function HomePage() {
+  // De sessie-check is lokaal (JWT, geen databasecall) en kost dus niets om
+  // hier te doen. De twee databasequeries lopen na elkaar: op deze
+  // Turso/libSQL-verbinding is dat sneller dan Promise.all (gemeten: concurrente
+  // queries op dezelfde adapter kosten door verbindingsoverhead meer tijd dan ze
+  // besparen). De winst hier zit in minder queries: 2 in plaats van de eerdere 4
+  // (geen apart leerling-fetch meer voor zoekbalk + waarschuwingen).
   const beheerder = await getBeheerder();
 
   const lezingenAsc = await prisma.lezing.findMany({
     orderBy: { datum: "asc" },
-    include: {
+    select: {
+      id: true,
+      titel: true,
+      datum: true,
       _count: {
         select: { aanwezigheden: { where: { aanwezig: true } } },
       },
     },
+  });
+
+  const leerlingenMetAanwezigheden = await prisma.leerling.findMany({
+    select: {
+      id: true,
+      naam: true,
+      actief: true,
+      aanwezigheden: { select: { lezingId: true, aanwezig: true } },
+    },
+    orderBy: { naam: "asc" },
   });
 
   const lezingen = [...lezingenAsc].reverse();
@@ -56,13 +75,16 @@ export default async function HomePage() {
   }));
 
   // Waarschuwingssysteem: alleen relevant, en alleen berekend, voor
-  // ingelogde beheerders. Zie lib/waarschuwingen.ts voor de berekening.
-  const waarschuwingen = beheerder ? await berekenWaarschuwingen() : [];
+  // ingelogde beheerders. Zuivere berekening op reeds opgehaalde data —
+  // geen extra databasecall. Zie lib/waarschuwingen.ts.
+  const waarschuwingen = beheerder
+    ? berekenWaarschuwingenVanData(lezingenAsc, leerlingenMetAanwezigheden)
+    : [];
 
-  const alleLeerlingen = await prisma.leerling.findMany({
-    select: { id: true, naam: true },
-    orderBy: { naam: "asc" },
-  });
+  const alleLeerlingen = leerlingenMetAanwezigheden.map((l) => ({
+    id: l.id,
+    naam: l.naam,
+  }));
 
   return (
     <div className="mx-auto max-w-3xl px-2 py-8 sm:px-6 sm:py-10">

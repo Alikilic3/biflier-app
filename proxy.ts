@@ -21,6 +21,10 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|icon|apple-icon|icon-192|icon-512|manifest.webmanifest).*)",
+    // Alles behalve: API-routes, Next.js-interne assets, en statische
+    // bestanden in public/ (herkenbaar aan hun extensie, bv. logo.svg,
+    // favicon.ico, afbeeldingen, lettertypes). Die moeten altijd zonder
+    // sessie-check en zonder redirect laden.
+    "/((?!api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|json|woff2?|ttf)$|icon|apple-icon|icon-192|icon-512|manifest.webmanifest).*)",
   ],
 };

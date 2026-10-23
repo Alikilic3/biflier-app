@@ -10,11 +10,17 @@ export default async function AfwezighedenPage() {
     redirect("/login");
   }
 
+  // Sequentieel: Promise.all op deze Turso/libSQL-verbinding is gemeten
+  // trager door extra verbindingsoverhead per concurrente query.
   const totaalLezingen = await prisma.lezing.count();
 
   const actieveLeerlingen = await prisma.leerling.findMany({
     where: { actief: true },
-    include: { aanwezigheden: true },
+    select: {
+      id: true,
+      naam: true,
+      aanwezigheden: { select: { aanwezig: true } },
+    },
   });
 
   const rijen = actieveLeerlingen

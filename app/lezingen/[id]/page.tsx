@@ -25,24 +25,28 @@ export default async function LezingDetailPage({
     notFound();
   }
 
-  const lezing = await prisma.lezing.findUnique({
-    where: { id: lezingId },
-  });
+  // Sequentieel: op deze Turso/libSQL-verbinding is Promise.all voor meerdere
+  // queries gemeten trager (extra verbindingsoverhead per concurrente query)
+  // dan ze gewoon na elkaar uitvoeren.
+  const lezing = await prisma.lezing.findUnique({ where: { id: lezingId } });
 
   if (!lezing) {
     notFound();
   }
 
   const beheerder = await getBeheerder();
-  const isAdmin = beheerder?.rol === "admin";
 
   const leerlingen = await prisma.leerling.findMany({
     where: { actief: true },
     orderBy: { naam: "asc" },
-    include: {
-      aanwezigheden: { where: { lezingId } },
+    select: {
+      id: true,
+      naam: true,
+      aanwezigheden: { where: { lezingId }, select: { aanwezig: true } },
     },
   });
+
+  const isAdmin = beheerder?.rol === "admin";
 
   const leerlingenMetStatus = leerlingen.map((leerling) => ({
     id: leerling.id,

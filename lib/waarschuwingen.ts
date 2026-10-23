@@ -30,24 +30,31 @@ export type Waarschuwing = {
   sindsLezing: LezingKort;
 };
 
-export async function berekenWaarschuwingen(): Promise<Waarschuwing[]> {
-  const lezingenAsc = await prisma.lezing.findMany({
-    orderBy: { datum: "asc" },
-    select: { id: true, titel: true, datum: true },
-  });
+type LeerlingMetAanwezigheden = {
+  id: number;
+  naam: string;
+  actief: boolean;
+  aanwezigheden: { lezingId: number; aanwezig: boolean }[];
+};
 
+/**
+ * Zuivere (DB-vrije) berekening — herbruikbaar wanneer de aanroeper de
+ * lezingen en leerlingen al heeft opgehaald (bv. parallel met andere
+ * queries), om een dubbele round-trip naar de database te vermijden.
+ */
+export function berekenWaarschuwingenVanData(
+  lezingenAsc: LezingKort[],
+  leerlingen: LeerlingMetAanwezigheden[]
+): Waarschuwing[] {
   if (lezingenAsc.length < MIN_MISTE_LEZINGEN_OP_RIJ) {
     return [];
   }
 
-  const actieveLeerlingen = await prisma.leerling.findMany({
-    where: { actief: true },
-    include: { aanwezigheden: true },
-  });
-
   const waarschuwingen: Waarschuwing[] = [];
 
-  for (const leerling of actieveLeerlingen) {
+  for (const leerling of leerlingen) {
+    if (!leerling.actief) continue;
+
     const statusPerLezing = new Map(
       leerling.aanwezigheden.map((a) => [a.lezingId, a.aanwezig])
     );
@@ -70,4 +77,29 @@ export async function berekenWaarschuwingen(): Promise<Waarschuwing[]> {
   waarschuwingen.sort((a, b) => b.aantalOpEenRij - a.aantalOpEenRij);
 
   return waarschuwingen;
+}
+
+/**
+ * Gemakscalls voor plekken die de data nog niet hebben opgehaald.
+ * Gebruik `berekenWaarschuwingenVanData` in plaats hiervan waar de
+ * lezingen/leerlingen toch al parallel worden opgehaald.
+ */
+export async function berekenWaarschuwingen(): Promise<Waarschuwing[]> {
+  const [lezingenAsc, leerlingen] = await Promise.all([
+    prisma.lezing.findMany({
+      orderBy: { datum: "asc" },
+      select: { id: true, titel: true, datum: true },
+    }),
+    prisma.leerling.findMany({
+      where: { actief: true },
+      select: {
+        id: true,
+        naam: true,
+        actief: true,
+        aanwezigheden: { select: { lezingId: true, aanwezig: true } },
+      },
+    }),
+  ]);
+
+  return berekenWaarschuwingenVanData(lezingenAsc, leerlingen);
 }

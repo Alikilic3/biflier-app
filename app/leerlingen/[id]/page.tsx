@@ -32,12 +32,6 @@ export default async function LeerlingProfielPagina({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const beheerder = await getBeheerder();
-
-  if (!beheerder) {
-    redirect("/login");
-  }
-
   const { id } = await params;
   const leerlingId = Number(id);
 
@@ -45,9 +39,22 @@ export default async function LeerlingProfielPagina({
     notFound();
   }
 
+  const beheerder = await getBeheerder();
+
+  if (!beheerder) {
+    redirect("/login");
+  }
+
+  // Sequentieel: Promise.all op deze Turso/libSQL-verbinding is gemeten
+  // trager door extra verbindingsoverhead per concurrente query.
   const leerling = await prisma.leerling.findUnique({
     where: { id: leerlingId },
-    include: { aanwezigheden: true },
+    select: {
+      naam: true,
+      telefoonOuder: true,
+      actief: true,
+      aanwezigheden: { select: { lezingId: true, aanwezig: true } },
+    },
   });
 
   if (!leerling) {
