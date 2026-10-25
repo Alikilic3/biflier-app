@@ -1,15 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Figtree } from "next/font/google";
 import Header from "./components/Header";
+import LanguageProvider from "./components/LanguageProvider";
+import { huidigeTaal } from "@/lib/taal";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
 });
 
@@ -27,15 +24,16 @@ export const viewport: Viewport = {
   themeColor: "#0b853f",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const taal = await huidigeTaal();
+
   return (
-    <html
-      lang="nl"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full">
-        <Header />
-        {children}
+    <html lang={taal} className={`${figtree.variable} h-full antialiased`}>
+      <body className="h-full">
+        <LanguageProvider initieelTaal={taal}>
+          <Header />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -1,10 +1,17 @@
-export default function HomePage() {
-  return (
-    <div className="mx-auto max-w-3xl px-2 py-8 sm:px-6 sm:py-10">
-      <h1 className="text-xl font-semibold text-neutral-900">BifLier</h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        De agenda komt hier binnenkort aan.
-      </p>
-    </div>
-  );
+import { getBeheerder, isEigenaar } from "@/lib/dal";
+import { getActiviteiten } from "@/lib/activiteiten";
+import { getSoorten } from "@/lib/soorten";
+import AgendaView from "@/app/components/AgendaView";
+
+export default async function HomePage() {
+  const beheerder = await getBeheerder();
+  const leiding = beheerder != null;
+
+  const [activiteiten, soorten, eigenaar] = await Promise.all([
+    getActiviteiten(leiding),
+    getSoorten(leiding),
+    isEigenaar(),
+  ]);
+
+  return <AgendaView activiteiten={activiteiten} soorten={soorten} leiding={leiding} isEigenaar={eigenaar} />;
 }

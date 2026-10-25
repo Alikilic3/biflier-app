@@ -20,3 +20,45 @@ model Beheerder {
   naam           String
   rol            String   @default("admin")
 }
+
+// zichtbaarheid: 'publiek' | 'leiding'
+// Geen Prisma-enum: de sqlite-provider (ook voor Turso/libSQL) ondersteunt
+// enums niet, zie ook Beheerder.rol hierboven.
+//
+// kernSoort: markeert de vaste "Overig"-soort. Die kan hernoemd worden maar
+// niet verwijderd (activiteiten van een verwijderde soort vallen terug op
+// "Overig"), zie app/beheer/soorten/actions.ts. Markeren via een boolean
+// i.p.v. op naam checken, zodat hernoemen de bescherming niet breekt.
+model Soort {
+  id            Int          @id @default(autoincrement())
+  naamNl        String
+  naamTr        String
+  kleur         String
+  zichtbaarheid String       @default("publiek")
+  kernSoort     Boolean      @default(false)
+  activiteiten  Activiteit[]
+}
+
+// titelTr/beschrijvingTr/locatieTr: optionele Turkse vertaling per activiteit.
+// Leeg (null) betekent "toon het Nederlandse veld" — er is dus geen verplichte
+// vertaling, enkel een override wanneer de beheerder er een invult.
+model Activiteit {
+  id            Int       @id @default(autoincrement())
+  titel         String
+  titelTr       String?
+  soortId       Int
+  soort         Soort     @relation(fields: [soortId], references: [id])
+  start         DateTime
+  einde         DateTime
+  heleDag       Boolean   @default(false)
+  locatie       String?
+  locatieTr     String?
+  beschrijving  String?
+  beschrijvingTr String?
+  zichtbaarheid String    @default("publiek")
+  reeksId       String?
+
+  @@index([start])
+  @@index([reeksId])
+  @@index([soortId])
+}

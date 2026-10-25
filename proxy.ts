@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
+const EIGENAAR_EMAIL = "mehmet@bif.be";
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
@@ -11,20 +13,24 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Elke andere pagina vereist een ingelogde sessie, ongeacht rol.
+  // /beheer vereist een sessie. De echte eigenaarscontrole gebeurt ook
+  // server-side in elke action (lib/dal.ts: requireEigenaar), dit is enkel
+  // voor een directe redirect i.p.v. een pagina laten renderen die daarna
+  // alsnog weigert.
   if (!req.auth) {
     const loginUrl = new URL("/login", req.nextUrl);
     loginUrl.searchParams.set("van", pathname);
     return NextResponse.redirect(loginUrl);
   }
+
+  if (req.auth.user?.email !== EIGENAAR_EMAIL) {
+    return NextResponse.redirect(new URL("/", req.nextUrl));
+  }
 });
 
 export const config = {
-  matcher: [
-    // Alles behalve: API-routes, Next.js-interne assets, en statische
-    // bestanden in public/ (herkenbaar aan hun extensie, bv. logo.svg,
-    // favicon.ico, afbeeldingen, lettertypes). Die moeten altijd zonder
-    // sessie-check en zonder redirect laden.
-    "/((?!api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|json|woff2?|ttf)$|icon|apple-icon|icon-192|icon-512|manifest.webmanifest).*)",
-  ],
+  // Enkel /beheer en /login zijn ooit achter een sessie-check: de rest van
+  // de site (agenda, activiteitdetails, .ics-feeds, statische bestanden) is
+  // publiek en loopt dus nooit door deze middleware.
+  matcher: ["/beheer/:path*", "/login"],
 };
