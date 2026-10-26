@@ -19,3 +19,25 @@ body {
   color: var(--foreground);
   font-family: var(--font-figtree), system-ui, sans-serif;
 }
+
+/* Zachte voortgangsstip op /onderhoud. Expliciete reduced-motion-override
+   i.p.v. te vertrouwen op Tailwinds animate-pulse, die dat niet afdwingt. */
+@keyframes onderhoud-puls {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(1.5);
+  }
+}
+.onderhoud-stip {
+  animation: onderhoud-puls 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .onderhoud-stip {
+    animation: none;
+  }
+}
