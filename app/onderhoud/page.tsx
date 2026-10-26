@@ -10,16 +10,19 @@ type OnderhoudTekst = {
   contact: string;
 };
 
+const CONTACT_TELEFOON = "0483 56 90 75";
+const CONTACT_TELEFOON_HREF = "tel:+32483569075";
+
 const TEKST: Record<Taal, OnderhoudTekst> = {
   nl: {
     titel: "We werken aan onze nieuwe agenda",
     tekst: "BifLier is tijdelijk niet beschikbaar. We zijn snel weer terug.",
-    contact: "Vragen? [e-mail of telefoonnummer]",
+    contact: "Vragen?",
   },
   tr: {
     titel: "Yeni ajandamız üzerinde çalışıyoruz",
     tekst: "BifLier geçici olarak kullanılamıyor. Kısa süre içinde geri döneceğiz.",
-    contact: "Sorularınız mı var? [e-posta veya telefon numarası]",
+    contact: "Sorularınız mı var?",
   },
 };
 
@@ -63,7 +66,12 @@ export default function OnderhoudPagina() {
 
       <span aria-hidden className="onderhoud-stip mt-2 block h-2.5 w-2.5 rounded-full bg-[#0b853f]" />
 
-      <p className="m-0 text-sm text-[#4f5b53]">{tx.contact}</p>
+      <p className="m-0 text-sm text-[#4f5b53]">
+        {tx.contact}{" "}
+        <a href={CONTACT_TELEFOON_HREF} className="font-semibold text-[#0b853f] underline underline-offset-2">
+          {CONTACT_TELEFOON}
+        </a>
+      </p>
     </main>
   );
 }
